@@ -1,4 +1,5 @@
 import ChangingTLSSettings from '/snippets/clickpipes/_changing_tls_settings.mdx';
+import SettingPartitionBy from '/snippets/clickpipes/_target_ch_partition_by.mdx';
 import GtidRequirements from '/snippets/clickpipes/database/mysql/_gtid_requirements.mdx';
 import { Image } from "/snippets/components/Image.jsx";
 
@@ -29,7 +30,7 @@ Configure your source database before you create the ClickPipe. If you haven't d
 **1.** Fill in the connection details for the source database you configured in the previous guide.
 
 <Info>
-Before you add your connection details, make sure you have allowed the ClickPipes IP addresses in your firewall rules. See the [list of ClickPipes IP addresses](/integrations/clickpipes/home#list-of-static-ips), and the configuration guide for your data source.
+Before you add your connection details, make sure you have allowed the ClickPipes IP addresses in your firewall rules. See the [list of ClickPipes IP addresses](/integrations/clickpipes/networking/static-ips), and the configuration guide for your data source.
 </Info>
 
 <Image img="/images/integrations/data-ingestion/clickpipes/mysql/mysql-connection-details.webp" alt="Fill in connection details" size="lg" border/>
@@ -53,7 +54,7 @@ For Amazon RDS and Amazon Aurora sources, you can authenticate with an [IAM role
    c. To use key-based authentication, click **Revoke and generate key pair** and copy the generated public key to your SSH server under `~/.ssh/authorized_keys`.
 
 <Note>
-Make sure to allow the [ClickPipes IP addresses](/integrations/clickpipes/home#list-of-static-ips) in the firewall rules of your SSH bastion host, so that ClickPipes can establish the SSH tunnel.
+Make sure to allow the [ClickPipes IP addresses](/integrations/clickpipes/networking/static-ips) in the firewall rules of your SSH bastion host, so that ClickPipes can establish the SSH tunnel.
 </Note>
 
 **4.** Click **Verify Connection**, then click **Next**.
@@ -80,6 +81,8 @@ You can adjust the advanced settings if needed. Each setting is described below:
 <Image img="/images/integrations/data-ingestion/clickpipes/mysql/select-destination-db.webp" alt="Select destination database" size="lg" border/>
 
 **2.** Select the tables you want to replicate from the source database. While selecting the tables, you can also rename them in the destination ClickHouse database, as well as exclude specific columns.
+
+**3.** <SettingPartitionBy />
 
 </Step>
 <Step title="Review permissions and start the ClickPipe" id="5-review-permissions-and-start-the-clickpipe">

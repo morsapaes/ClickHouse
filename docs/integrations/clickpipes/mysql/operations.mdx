@@ -105,7 +105,7 @@ All the settings of the original ClickPipe are retained in the resync ClickPipe.
 Here are a few scenarios:
 
 1. You may need to perform major schema changes on the source tables which would break the existing ClickPipe and you would need to restart. You can just click Resync after performing the changes.
-2. Specifically for Clickhouse, maybe you needed to update the values in ORDER BY columns on the target tables. You can Resync to re-populate data into the new table with the right sorting key.
+2. Specifically for ClickHouse, maybe you needed to update the values in ORDER BY columns on the target tables. You can Resync to re-populate data into the new table with the right sorting key.
 
 <Note>
 You can resync multiple times, however please account for the load on the source database when you resync,
@@ -160,10 +160,9 @@ ClickPipes for MySQL can detect schema changes in the source tables and, in some
 | Schema Change Type                                                                  | Behaviour                             |
 | ----------------------------------------------------------------------------------- | ------------------------------------- |
 | Adding a new column (`ALTER TABLE ADD COLUMN ...`)                                  | Propagated automatically. The new columns will be populated for all rows replicated after the schema change                                                                         |
-| Adding a new column with a default value (`ALTER TABLE ADD COLUMN ... DEFAULT ...`) | Propagated automatically. The new columns will be populated for all rows replicated after the schema change, but existing rows won't show the default value without a full table refresh |
+| Adding a new column with a default value (`ALTER TABLE ADD COLUMN ... DEFAULT ...`) | Propagated automatically. [Supported defaults](#default-values-for-added-columns) are also added to the ClickHouse column, so they apply to rows already in ClickHouse as well as rows replicated after the schema change. |
 | Dropping an existing column (`ALTER TABLE DROP COLUMN ...`)                         | Detected, but **not** propagated. The dropped columns will be populated with `NULL` for all rows replicated after the schema change                                                                |
 
-[//]: # "TODO OUTDATED: the 'add column with default' row is wrong. Constant defaults are now propagated to the ClickHouse table, so existing rows do read the default value."
 [//]: # "TODO Add a row for online schema migration tools (gh-ost, pt-online-schema-change): column additions performed via ghost tables and an atomic `RENAME TABLE` are detected and propagated."
 [//]: # "TODO Add a row for changing a column's type (`ALTER TABLE MODIFY COLUMN ...`): the destination column type isn't changed, and incoming values are coerced into it. Link to Overview > Data types > Type coercion once that section is written."
 
@@ -172,6 +171,29 @@ Column additions during snapshot are currently not supported. The suggested work
 </Note>
 
 [//]: # "TODO Verify the note above is still true before GA."
+
+### Default values for added columns {#default-values-for-added-columns}
+
+For an added column, ClickPipes propagates a default only when it can translate the value safely to ClickHouse. When a default is propagated, ClickHouse uses it when reading data parts that predate the new column. As a result, rows already present in ClickHouse receive the source default without a full table refresh.
+
+ClickPipes propagates literal integer, decimal, and floating-point values; booleans; simple string and date values; and enum or set values when the MySQL server provides full binlog row metadata. It rewrites string literals using ClickHouse-compatible quoting.
+
+ClickPipes intentionally omits defaults that are not portable literals, including `NULL`, bit literals, function calls such as `CURRENT_TIMESTAMP`, `NOW()`, or `UUID()`, and string values containing backslashes or control characters. The column is still added, but ClickHouse uses its normal type default for parts that predate the column. A full table refresh is required if those existing rows must contain the source default.
+
+ClickPipes propagates defaults only as part of `ALTER TABLE ADD COLUMN`. Later operations that change or remove a column default are not propagated to ClickHouse.
+
+### MySQL 5.x limitations {#mysql-5-limitations}
+
+MySQL versions older than [8.0.1](https://dev.mysql.com/blog-archive/more-metadata-is-written-into-binary-log/) do not include full column metadata in the binlog (`binlog_row_metadata=FULL`), so ClickPipes tracks columns by ordinal position. This means:
+
+- **Adding a column at the end** (`ALTER TABLE ADD COLUMN ...`) is supported.
+- **Any DDL that shifts column positions** will cause the pipe to raise an error, because ordinal positions can no longer be reliably mapped. This includes:
+  - `ALTER TABLE DROP COLUMN ...`
+  - `ALTER TABLE ADD COLUMN ... AFTER ...` / `FIRST`
+  - `ALTER TABLE MODIFY COLUMN ... AFTER ...` / `FIRST`
+  - `ALTER TABLE CHANGE COLUMN ... AFTER ...` / `FIRST`
+
+If you hit this error, you will need to resync the pipe.
 
 ### MySQL 5.x limitations {#mysql-5-limitations}
 
