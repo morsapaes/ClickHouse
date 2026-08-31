@@ -113,25 +113,10 @@
       "group": "ClickPipes for MySQL",
       "icon": "/images/integrations/logos/mysql.svg",
       "pages": [
-        "integrations/clickpipes/mysql/faq",
-        "integrations/clickpipes/mysql/datatypes",
-        "integrations/clickpipes/mysql/parallel-initial-load",
-        "integrations/clickpipes/mysql/schema-changes",
-        "integrations/clickpipes/mysql/lifecycle",
+        "integrations/clickpipes/mysql/index",
+        "integrations/clickpipes/mysql/get-started",
         {
-          "group": "Operations",
-          "pages": [
-            "integrations/clickpipes/mysql/add-table",
-            "integrations/clickpipes/mysql/pause-and-resume",
-            "integrations/clickpipes/mysql/remove-table",
-            "integrations/clickpipes/mysql/table-resync",
-            "integrations/clickpipes/mysql/resync",
-            "integrations/clickpipes/mysql/controlling-sync",
-            "integrations/clickpipes/mysql/scaling"
-          ]
-        },
-        {
-          "group": "Source",
+          "group": "Data sources",
           "pages": [
             "integrations/clickpipes/mysql/source/rds",
             "integrations/clickpipes/mysql/source/aurora",
@@ -141,7 +126,9 @@
             "integrations/clickpipes/mysql/source/rds-maria",
             "integrations/clickpipes/mysql/source/generic-maria"
           ]
-        }
+        },
+        "integrations/clickpipes/mysql/operations",
+        "integrations/clickpipes/mysql/troubleshooting"
       ],
       "root": "integrations/clickpipes/mysql/index"
     },

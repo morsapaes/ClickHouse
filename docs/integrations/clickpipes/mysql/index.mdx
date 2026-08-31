@@ -1,129 +1,401 @@
 ---
-sidebarTitle: 'Ingesting Data from MySQL to ClickHouse'
-description: 'Seamlessly ingest data from your MySQL or MariaDB database to ClickHouse Cloud.'
+sidebarTitle: 'Overview'
+description: 'Seamlessly connect your MySQL or MariaDB database to ClickHouse Cloud.'
 slug: /integrations/clickpipes/mysql
-title: 'Ingesting data from MySQL to ClickHouse (using CDC)'
+title: 'Integrating MySQL with ClickHouse Cloud'
 doc_type: 'guide'
-keywords: ['MySQL', 'ClickPipes', 'CDC', 'change data capture', 'database replication']
+keywords: ['MySQL', 'MariaDB', 'ClickPipes', 'CDC', 'change data capture', 'database replication']
 integration:
-   - support_level: 'core'
-   - category: 'clickpipes'
+  - support_level: 'core'
+  - category: 'clickpipes'
 ---
 
-import BetaBadge from "/snippets/components/BetaBadge/BetaBadge.jsx";
-
+import GtidRequirements from '/snippets/clickpipes/database/mysql/_gtid_requirements.mdx';
 import { Image } from "/snippets/components/Image.jsx";
-import ChangingTLSSettings from '/snippets/clickpipes/_changing_tls_settings.mdx';
 
-<BetaBadge/>
+The MySQL ClickPipe provides a fully-managed and resilient way to ingest data from MySQL and MariaDB databases into ClickHouse Cloud. It supports both **one-time** ingestion (bulk load) and **continuous ingestion** via **Change Data Capture (CDC)**.
 
-<Info>
-Ingesting data from MySQL to ClickHouse Cloud via ClickPipes is in public beta.
-</Info>
+MySQL ClickPipes can be deployed and managed using the ClickPipes UI, as well as programmatically using [OpenAPI](/integrations/clickpipes/programmatic-access/openapi) and [Terraform](/integrations/clickpipes/programmatic-access/terraform).
 
-The MySQL ClickPipe provides a fully-managed and resilient way to ingest data from MySQL and MariaDB databases into ClickHouse Cloud. It supports both **bulk loads** for one-time ingestion and **Change Data Capture (CDC)** for continuous ingestion.
+## Supported data sources {#supported-data-sources}
 
-MySQL ClickPipes can be deployed and managed manually using the ClickPipes UI, as well as programmatically using [OpenAPI](/integrations/clickpipes/programmatic-access/openapi) and [Terraform](/integrations/clickpipes/programmatic-access/terraform).
+| Name | Details |
+|------|---------|
+| <img src="/images/integrations/logos/mysql.svg" alt="MySQL logo" className="integration-table-logo" width="24" height="24" /> **Amazon RDS MySQL** <br></br> _One-time load, CDC_ | Follow the [Amazon RDS MySQL](/integrations/clickpipes/mysql/source/rds) configuration guide. |
+| <img src="/images/integrations/logos/mysql.svg" alt="MySQL logo" className="integration-table-logo" width="24" height="24" /> **Amazon Aurora MySQL** <br></br> _One-time load, CDC_ | Follow the [Amazon Aurora MySQL](/integrations/clickpipes/mysql/source/aurora) configuration guide. |
+| <img src="/images/integrations/logos/mysql.svg" alt="MySQL logo" className="integration-table-logo" width="24" height="24" /> **Cloud SQL for MySQL** <br></br> _One-time load, CDC_ | Follow the [Cloud SQL for MySQL](/integrations/clickpipes/mysql/source/gcp) configuration guide. |
+| <img src="/images/integrations/logos/mysql.svg" alt="MySQL logo" className="integration-table-logo" width="24" height="24" /> **Azure Flexible Server for MySQL** <br></br> _One-time load_ | Follow the [Azure Flexible Server for MySQL](/integrations/clickpipes/mysql/source/azure-flexible-server-mysql) configuration guide. |
+| <img src="/images/integrations/logos/mysql.svg" alt="MySQL logo" className="integration-table-logo" width="24" height="24" /> **Self-hosted MySQL** <br></br> _One-time load, CDC_ | Follow the [Generic MySQL](/integrations/clickpipes/mysql/source/generic) configuration guide. |
+| <img src="/images/integrations/logos/mariadb.svg" alt="MariaDB logo" className="integration-table-logo" width="24" height="24" /> **Amazon RDS MariaDB** <br></br> _One-time load, CDC_ | Follow the [Amazon RDS MariaDB](/integrations/clickpipes/mysql/source/rds-maria) configuration guide. |
+| <img src="/images/integrations/logos/mariadb.svg" alt="MariaDB logo" className="integration-table-logo" width="24" height="24" /> **Self-hosted MariaDB** <br></br> _One-time load, CDC_ | Follow the [Generic MariaDB](/integrations/clickpipes/mysql/source/generic-maria) configuration guide. |
 
-## Prerequisites {#prerequisites}
+The MySQL ClickPipe supports MariaDB 10.0.2 and above (the first release with GTID support). The configuration for it is very similar to MySQL, using GTID replication by default.
 
-[//]: # "TODO Binlog replication configuration isn't needed for one-time ingestion pipes. This has been a source of confusion in the past, so we should also provide the bare minimum requirements for bulk loads to avoid scaring users off."
+PlanetScale, Vitess and TiDB aren't supported, because they don't support MySQL's binlog API.
 
-To get started, you first need to ensure that your MySQL database is correctly configured for binlog replication. The configuration steps depend on how you're deploying MySQL, so please follow the relevant guide below:
+[//]: # "TODO Add the hard prerequisites for CDC pipes, which aren't stated anywhere today: GTID mode (`gtid_mode=ON`, `enforce_gtid_consistency=ON`) and at least 72 hours of binlog retention. Pipe creation fails validation without them."
+[//]: # "TODO Note that read replicas are supported as sources, and require `log_replica_updates=ON`."
 
-### Supported data sources {#supported-data-sources}
+## Features {#features}
 
-| Name                 | Logo | Details           |
-|----------------------|------|-------------------|
-| **Amazon RDS MySQL** <br></br> _One-time load, CDC_ |  | Follow the [Amazon RDS MySQL](/integrations/clickpipes/mysql/source/rds) configuration guide. |
-| **Amazon Aurora MySQL** <br></br> _One-time load, CDC_ |  | Follow the [Amazon Aurora MySQL](/integrations/clickpipes/mysql/source/aurora) configuration guide. |
-| **Cloud SQL for MySQL** <br></br> _One-time load, CDC_ | |  Follow the [Cloud SQL for MySQL](/integrations/clickpipes/mysql/source/gcp) configuration guide. |
-| **Azure Flexible Server for MySQL** <br></br> _One-time load_ |  | Follow the [Azure Flexible Server for MySQL](/integrations/clickpipes/mysql/source/azure-flexible-server-mysql) configuration guide. |
-| **Self-hosted MySQL** <br></br> _One-time load, CDC_ | |  Follow the [Generic MySQL](/integrations/clickpipes/mysql/source/generic) configuration guide. |
-| **Amazon RDS MariaDB** <br></br> _One-time load, CDC_ |  | Follow the [Amazon RDS MariaDB](/integrations/clickpipes/mysql/source/rds-maria) configuration guide. |
-| **Self-hosted MariaDB** <br></br> _One-time load, CDC_ | |  Follow the [Generic MariaDB](/integrations/clickpipes/mysql/source/generic-maria) configuration guide. |
+[//]: # "TODO CONTENT GAP: no existing prose describes the two modes beyond the introduction above. Write a short description of each: what a bulk load does and when the pipe completes, versus what CDC does and how it follows on from the initial load."
 
-Once your source MySQL database is set up, you can continue creating your ClickPipe.
+## Sync overview {#sync-overview}
 
-## Create your ClickPipe {#create-your-clickpipe}
+### Initial load {#initial-load}
 
-Make sure you're logged in to your ClickHouse Cloud account. If you don't have an account yet, you can sign up [here](https://cloud.clickhouse.com/).
+[//]: # "TODO REWRITE — highest priority in the GA docs review. Everything in this subsection describes the old opt-in method, where the user picked a partition key column per table behind a feature flag. Parallel snapshotting is now automatic and unconditional: the partition key defaults to the leading column of the primary key, string and UUID keys parallelize too, partition counts come from `information_schema` row estimates rather than `COUNT(*)`, and the flag was removed. Tables with no primary key, or with an unsupported leading-PK type, fall back to a single-threaded full-table `SELECT`. The consistency model is also undocumented: the binlog position is recorded before the initial load starts and the snapshot doesn't run in a single transaction, so writes during the snapshot are re-delivered by CDC and deduplicated."
 
-[//]: # (   TODO update image here)
-1. In the ClickHouse Cloud console, navigate to your ClickHouse Cloud Service.
+Initial load is the first phase of a CDC ClickPipe, where the ClickPipe syncs the historical data of the tables in the source database over to ClickHouse, before then starting CDC. A lot of the times, developers do this in a single-threaded manner.
+However, the MySQL ClickPipe can parallelize this process, which can significantly speed up the initial load.
 
-<Image img="/images/integrations/data-ingestion/clickpipes/cp_service.webp" alt="ClickPipes service" size="lg" border/>
+#### Partition key column {#key-mysql-snapshot}
 
-2. Select the `Data Sources` button on the left-side menu and click on "Set up a ClickPipe"
+Once we've enabled the feature flag, you should see the below setting in the ClickPipe table picker (both during creation and editing of a ClickPipe):
 
-<Image img="/images/integrations/data-ingestion/clickpipes/cp_step0.webp" alt="Select imports" size="lg" border/>
+<Image img="/images/integrations/data-ingestion/clickpipes/mysql/partition_key.webp" alt="Partition key column" size="md"/>
 
-3. Select the `MySQL CDC` tile
+The MySQL ClickPipe uses a column on your source table to logically partition the source tables. This column is called the **partition key column**. It is used to divide the source table into partitions, which can then be processed in parallel by the ClickPipe.
 
-<Image img="/images/integrations/data-ingestion/clickpipes/mysql/mysql-tile.webp" alt="Select MySQL" size="lg" border/>
+<Warning>
+The partition key column must be indexed in the source table to see a good performance boost. This can be seen by running `SHOW INDEX FROM <table_name>` in MySQL.
+</Warning>
 
-### Add your source MySQL database connection {#add-your-source-mysql-database-connection}
+#### Logical partitioning {#logical-partitioning-mysql-snapshot}
 
-4. Fill in the connection details for your source MySQL database which you configured in the prerequisites step.
+Let's talk about the below settings:
 
-<Info>
-   Before you start adding your connection details make sure that you have whitelisted ClickPipes IP addresses in your firewall rules. On the following page you can find a [list of ClickPipes IP addresses](/integrations/clickpipes/home#list-of-static-ips).
-   For more information refer to the source MySQL setup guides linked at [the top of this page](#prerequisites).
-</Info>
+<Image img="/images/integrations/data-ingestion/clickpipes/mysql/snapshot_params.webp" alt="Snapshot parameters" size="md"/>
 
-   <Image img="/images/integrations/data-ingestion/clickpipes/mysql/mysql-connection-details.webp" alt="Fill in connection details" size="lg" border/>
+**Snapshot number of rows per partition.** This setting controls how many rows constitute a partition. The ClickPipe will read the source table in chunks of this size, and chunks are processed in parallel based on the initial load parallelism set. The default value is 100,000 rows per partition.
 
-#### (Optional) Changing TLS settings {#optional-changing-tls-settings}
+**Initial load parallelism.** This setting controls how many partitions are processed in parallel. The default value is 4, which means that the ClickPipe will read 4 partitions of the source table in parallel. This can be increased to speed up the initial load, but it is recommended to keep it to a reasonable value depending on your source instance specs to avoid overwhelming the source database. The ClickPipe will automatically adjust the number of partitions based on the size of the source table and the number of rows per partition.
 
-<ChangingTLSSettings/>
+**Snapshot number of tables in parallel.** Not really related to parallel snapshot, but this setting controls how many tables are processed in parallel during the initial load. The default value is 1. Note that is on top of the parallelism of the partitions, so if you have 4 partitions and 2 tables, the ClickPipe will read 8 partitions in parallel.
 
-#### (Optional) Set up SSH Tunneling {#optional-set-up-ssh-tunneling}
+[//]: # "TODO Verify the defaults and maxima with the team, then state them: control-plane validation constants say default 100,000 rows per partition, max initial load parallelism 8, max parallel tables 8."
 
-You can specify SSH tunneling details if your source MySQL database isn't publicly accessible.
+#### Monitoring parallel snapshot {#monitoring-parallel-mysql-snapshot}
 
-1. Enable the "Use SSH Tunnelling" toggle.
-2. Fill in the SSH connection details.
+You can run **SHOW processlist** in MySQL to see the parallel snapshot in action. The ClickPipe will create multiple connections to the source database, each reading a different partition of the source table. If you see **SELECT** queries with different ranges, it means that the ClickPipe is reading the source tables. You can also see the COUNT(*) and the partitioning query in here.
 
-   <Image img="/images/integrations/data-ingestion/clickpipes/postgres/ssh-tunnel.jpg" alt="SSH tunneling" size="lg" border/>
+[//]: # "TODO Refresh: for string partition keys you now see short `EXPLAIN` and `LIMIT 1` probe queries instead of `COUNT(*)`."
 
-3. To use Key-based authentication, click on "Revoke and generate key pair" to generate a new key pair and copy the generated public key to your SSH server under `~/.ssh/authorized_keys`.
-4. Click on "Verify Connection" to verify the connection.
+#### Initial load limitations {#limitations-parallel-mysql-snapshot}
+
+[//]: # "TODO OUTDATED — both bullets below are wrong. Snapshot parameters *can* be edited after pipe creation, from the pipe's Settings > Advanced settings flyout, and they apply to subsequently added tables. Overriding them for a resync is available via the API, though the resync dialog override UI is currently Postgres-only."
+
+- The snapshot parameters can't be edited after pipe creation. If you want to change them, you will have to create a new ClickPipe.
+- When adding tables to an existing ClickPipe, you can't change the snapshot parameters. The ClickPipe will use the existing parameters for the new tables.
+
+### Replication {#replication}
+
+ClickPipes reads changes from the source's binary log (binlog). Unlike Postgres, there's no replication slot to manage; instead, you must configure a sufficient binlog retention period on the source. If the ClickPipe's offset into the binlog becomes invalid — for example because the pipe was paused for longer than the retention period, or a database failover occurred while using file position replication — you need to [resync](/integrations/clickpipes/mysql/operations#resync-a-pipe) the pipe.
+
+Changes are tracked by GTID by default:
+
+<GtidRequirements />
+
+`FilePos` replication has to be enabled for your organization by [support](https://clickhouse.com/company/contact?loc=clickpipes), and isn't available for MariaDB sources at all.
+
+Make sure to optimize materialized views depending on destination tables, as inefficient queries can slow down ingestion to fall behind the retention period.
+
+It's also possible for an inactive database to rotate the log file without allowing ClickPipes to progress to a more recent offset. You may need to setup a heartbeat table with regularly scheduled updates.
+
+At the start of an initial load we record the binlog offset to start at. This offset must still be valid when the initial load finishes in order for CDC to progress. If you're ingesting a large amount of data be sure to configure an appropriate binlog retention period.
+
+[//]: # "TODO OUTDATED: the FAQ version of the paragraph above ended by advising users to configure *Use a custom partitioning key for initial load* for large tables so a single table can be loaded in parallel. That advice is obsolete — parallel loading is now automatic for tables with a primary key, and the partition key setting is an optional override — and the UI label no longer matches, so the sentence was dropped rather than moved."
+
+Use the optional `Server ID` setting to deterministically identify your ClickPipe on the source server. If it isn't set, ClickPipes generates a random server ID that might change over the ClickPipe lifecycle.
+
+[//]: # "TODO Expand on `Server ID`: it declares the pipe's identity in the MySQL replication topology, which is needed when there are multiple replication consumers, and it's validated for uniqueness against connected replicas."
+[//]: # "TODO Document that a recovery path for purged-GTID errors (error 1236) in multi-writer topologies exists via support."
+
+### Sync control {#sync-control}
+
+This section describes how to control the sync of a MySQL ClickPipe when the ClickPipe is in **CDC (Running) mode**.
+
+Database ClickPipes have an architecture that consists of two parallel processes - pulling from the source database and pushing to the target database. The pulling process is controlled by a sync configuration that defines how often the data should be pulled and how much data should be pulled at a time. By "at a time", we mean one batch - since the ClickPipe pulls and pushes data in batches.
+
+There are two main ways to control the sync of a MySQL ClickPipe. The ClickPipe will start pushing when one of the below settings kicks in.
+
+#### Sync interval {#interval}
+
+The sync interval of the pipe is the amount of time (in seconds) for which the ClickPipe will pull records from the source database. The time to push what we have to ClickHouse isn't included in this interval.
+
+The default is **1 minute**.
+Sync interval can be set to any positive integer value, but it is recommended to keep it above 10 seconds.
+
+#### Pull batch size {#batch-size}
+
+The pull batch size is the number of records that the ClickPipe will pull from the source database in one batch. Records mean inserts, updates and deletes done on the tables that are part of the pipe.
+
+The default is **100,000** records.
+A safe maximum is 10 million.
+
+#### An exception: Long-running transactions on source {#transactions}
+
+When a transaction is run on the source database, the ClickPipe waits until it receives the COMMIT of the transaction before it moves forward. This with **overrides** both the sync interval and the pull batch size.
+
+#### Configuring sync settings {#configuring}
+
+You can set the sync interval and pull batch size when you create a ClickPipe or edit an existing one.
+When creating a ClickPipe it will be seen in the second step of the creation wizard, as shown below:
+
+<Image img="/images/integrations/data-ingestion/clickpipes/postgres/create_sync_settings.webp" alt="Create sync settings" size="md"/>
+
+When editing an existing ClickPipe, you can head over to the **Settings** tab of the pipe, pause the pipe and then click on **Configure** here:
+
+<Image img="/images/integrations/data-ingestion/clickpipes/postgres/edit_sync_button.webp" alt="Edit sync button" size="md"/>
+
+This will open a flyout with the sync settings, where you can change the sync interval and pull batch size:
+
+<Image img="/images/integrations/data-ingestion/clickpipes/postgres/sync_settings_edit.webp" alt="Edit sync settings" size="md"/>
+
+#### Monitoring sync control behaviour {#monitoring}
+
+You can see how long each batch takes in the **CDC Syncs** table in the **Metrics** tab of the ClickPipe. Note that the duration here includes push time and also if there are no rows incoming, the ClickPipe waits and the wait time is also included in the duration.
+
+<Image img="/images/integrations/data-ingestion/clickpipes/postgres/cdc_syncs.webp" alt="CDC Syncs table" size="md"/>
+
+[//]: # "TODO Optionally add the Commit Lag chart on the pipe's Metrics tab (source lag, destination lag, end-to-end lag) to this monitoring section."
+
+### Scaling {#scaling}
+
+<Warning>
+**Most users won't need this API**
+
+Default configuration of DB ClickPipes is designed to handle the majority of workloads out of the box. If you think your workload requires scaling, open a [support case](https://clickhouse.com/support/program) and we'll guide you through the optimal settings for the use case.
+</Warning>
+
+Scaling API may be useful for:
+- Large initial loads (over 4 TB)
+- Migrating a moderate amount of data as quickly as possible
+- Supporting over 8 CDC ClickPipes under the same service
+
+Before attempting to scale up, consider:
+- Ensuring the source DB has sufficient available capacity
+- First adjusting [initial load parallelism and partitioning](#initial-load) when creating a ClickPipe
+- Checking for [long-running transactions](#transactions) on the source that could be causing CDC delays
+
+**Increasing the scale will proportionally increase your ClickPipes compute costs.** If you're scaling up just for the initial loads, it's important to scale down after the snapshot is finished to avoid unexpected charges. For more details on pricing, see [ClickPipes pricing](/products/cloud/reference/billing/clickpipes/index).
+
+[//]: # "TODO The ClickPipes CDC billing docs are Postgres-only. GA introduces MySQL CDC pricing (beta was free), so a MySQL section is needed there and this link should point at it."
+
+#### Prerequisites {#prerequisites}
+
+Before you get started you will need:
+
+1. [ClickHouse API key](/products/cloud/features/admin-features/api/openapi) with Admin permissions on the target ClickHouse Cloud service.
+2. A DB ClickPipe (Postgres, MySQL or MongoDB) provisioned in the service at some point in time. CDC infrastructure gets created along with the first ClickPipe, and the scaling endpoints become available from that point onwards.
+
+#### Steps to scale DB ClickPipes {#cdc-scaling-steps}
+
+Set the following environment variables before running any commands:
+
+```bash
+ORG_ID=<Your ClickHouse organization ID>
+SERVICE_ID=<Your ClickHouse service ID>
+KEY_ID=<Your ClickHouse key ID>
+KEY_SECRET=<Your ClickHouse key secret>
+```
+
+Fetch the current scaling configuration (optional):
+
+```bash
+curl --silent --user $KEY_ID:$KEY_SECRET \
+https://api.clickhouse.cloud/v1/organizations/$ORG_ID/services/$SERVICE_ID/clickpipesCdcScaling \
+| jq
+
+# example result:
+{
+  "result": {
+    "replicaCpuMillicores": 2000,
+    "replicaMemoryGb": 8
+  },
+  "requestId": "04310d9e-1126-4c03-9b05-2aa884dbecb7",
+  "status": 200
+}
+```
+
+[//]: # "TODO OUTDATED: the supported range below is now 1-32 CPU cores and up to 128 GiB of memory (memory = 4x cores). Update the sentence and both example payloads."
+
+Set the desired scaling. Supported configurations include 1-24 CPU cores with memory (GB) set to 4× the core count:
+
+```bash
+cat <<EOF | tee cdc_scaling.json
+{
+  "replicaCpuMillicores": 24000,
+  "replicaMemoryGb": 96
+}
+EOF
+
+curl --silent --user $KEY_ID:$KEY_SECRET \
+-X PATCH -H "Content-Type: application/json" \
+https://api.clickhouse.cloud/v1/organizations/$ORG_ID/services/$SERVICE_ID/clickpipesCdcScaling \
+-d @cdc_scaling.json | jq
+```
+
+Wait for the configuration to propagate (typically 3-5 minutes). After the scaling is finished, the GET endpoint will reflect the new values:
+
+```bash
+curl --silent --user $KEY_ID:$KEY_SECRET \
+https://api.clickhouse.cloud/v1/organizations/$ORG_ID/services/$SERVICE_ID/clickpipesCdcScaling \
+| jq
+
+# example result:
+{
+  "result": {
+    "replicaCpuMillicores": 24000,
+    "replicaMemoryGb": 96
+  },
+  "requestId": "5a76d642-d29f-45af-a857-8c4d4b947bf0",
+  "status": 200
+}
+```
+
+## Data types {#data-types}
+
+### Type mapping {#type-mapping}
+
+Here is the supported data-type mapping for the MySQL ClickPipe:
+
+| MySQL Type                | ClickHouse type        | Notes                                                                                  |
+| --------------------------| -----------------------| -------------------------------------------------------------------------------------- |
+| Enum                      | LowCardinality(String) ||
+| Set                       | String                 ||
+| Decimal                   | Decimal(76,38)         | Values exceeding 38 integer digits are ingested as zero. |
+| Bit                       | UInt64                 ||
+| TinyInt                   | Int8                   | Supports unsigned.|
+| SmallInt                  | Int16                  | Supports unsigned.|
+| MediumInt, Int            | Int32                  | Supports unsigned.|
+| BigInt                    | Int64                  | Supports unsigned.|
+| Serial                    | UInt64                 ||
+| Year                      | Int16                  ||
+| TinyInt(1)                | Bool                   ||
+| Float                     | Float32                | Precision on ClickHouse may differ from MySQL during initial load due to text protocol. `Float(p)` maps to `Float32` for `p <= 24` and `Float64` for `p >= 25`.|
+| Double                    | Float64                | Precision on ClickHouse may differ from MySQL during initial load due to text protocol.|
+| TinyText, Text, MediumText, LongText | String      ||
+| TinyBlob, Blob, MediumBlob, LongBlob | String      ||
+| Char, Varchar             | String                 ||
+| Long, Long Varchar        | String                 ||
+| Binary, VarBinary         | String                 ||
+| Long VarBinary            | String                 ||
+| JSON                      | String                 | MySQL only; MariaDB `json` is just an alias for `text` with a constraint.              |
+| Geometry & Geometry Types | String | WKT (Well-Known Text). WKT may suffer from small precision loss. |
+| UUID                      | UUID                   | MariaDB only. Columns added during CDC are added as `String` holding the raw 16 bytes. |
+| INET4, INET6              | String                 | MariaDB only.                                                                          |
+| Vector                    | Array(Float32)         | MySQL only; MariaDB is adding support soon.                                            |
+| Char Byte, Raw            | String                 | MariaDB/Oracle-mode aliases for binary types.                                          |
+| Clob, Varchar2, XMLType   | String                 | MariaDB/Oracle-mode aliases for text types.                                            |
+| Number                    | Decimal                | MariaDB/Oracle-mode alias for `Decimal`.                                               |
+| Date                      | Date32                 | 00 day/month mapped to 01.|
+| Time                      | DateTime64(6)          | Time offset from unix epoch.|
+| Datetime, Timestamp       | DateTime64(6)          | 00 day/month mapped to 01.|
+
+[//]: # "TODO OUTDATED `Time`: now maps to `Time64(6)` when the destination ClickHouse service is 25.12 or newer. Document both behaviors, or the version gate."
+[//]: # "TODO OUTDATED `Vector`: MariaDB `VECTOR` is now supported during CDC, so the 'MariaDB is adding support soon' note is wrong."
+[//]: # "TODO Add a note that non-UTF-8 source charsets (`latin1`, `gbk`, ...) are transcoded to UTF-8."
+[//]: # "TODO Verify that `Bit` -> `UInt64` now applies consistently on both the snapshot and CDC paths for new pipes."
+
+### Type coercion {#type-coercion}
+
+[//]: # "TODO CONTENT GAP: no existing content. Document the coercions that apply when a source column's type is altered but the destination ClickHouse column keeps the type it was created with. Source integers arriving at a `String` column are formatted as decimal text; `Float` widens to `Float64` and `Double` narrows to `Float32`; text arriving at a numeric column is parsed, and an unparseable or out-of-range value becomes 0; text arriving at a `Bool` column is true only for true/t/on/yes/1, case-insensitive, and false otherwise. Coercion failures are silent apart from a single warning per batch. Tracked in DBI-378."
+
+### Metadata columns {#metadata-columns}
+
+[//]: # "TODO CONTENT GAP: no existing content. Document the destination table engine (`ReplacingMergeTree`), the `_peerdb_` metadata columns, and how to deduplicate rows at query time."
+
+## Access control {#access-control}
+
+### Permissions {#permissions}
+
+[//]: # "TODO CONTENT GAP: no existing content on this page. The grants required on the source database are documented per source today, in each configuration guide's 'Configure a database user' section. Summarize them here, along with the ClickHouse Cloud role required for the destination."
+
+### Authentication {#authentication}
+
+[//]: # "TODO CONTENT GAP: no existing content. Document the supported authentication methods (password, and IAM roles for Amazon RDS and Aurora) and the TLS controls: TLS host, root CA upload, skip certificate verification, and the explicit option to disable TLS. TLS failure modes are covered in Troubleshooting."
+
+### Network access {#network-access}
+
+* For **IP-based access control**, your firewall rules must allow the static IPs for the ClickPipes service region listed [here](/integrations/clickpipes/home#list-of-static-ips).
+* For sources that aren't publicly accessible, you can use **SSH tunneling** or [**AWS PrivateLink**](/integrations/clickpipes/aws-privatelink).
+
+[//]: # "TODO Also document GCP Private Service Connect reverse private endpoints, including cross-region, and custom private DNS names for reverse private endpoints."
+
+## Lifecycle {#lifecycle}
+
+This section covers the various phases of a MySQL ClickPipe, the different statuses it can have, and what they mean. Note that this applies to MariaDB as well.
+
+[//]: # "TODO Add the `Degraded` state: the pipe is running but impaired, and Pause, Resume and Resync remain available from it."
+
+### Provisioning {#provisioning}
+
+When you click on the Create ClickPipe button, the ClickPipe is created in a `Provisioning` state. The provisioning process is where we spin up the underlying infrastructure to run ClickPipes for the service, along with registering some initial metadata for the pipe. Since compute for ClickPipes within a service is shared, your second ClickPipe will be created much faster than the first one -- as the infrastructure is already in place.
+
+### Setup {#setup}
+
+After a pipe is provisioned, it enters the `Setup` state. This state is where we create the destination ClickHouse tables. We also obtain and record the table definitions of your source tables here.
+
+### Snapshot {#snapshot}
+
+Once setup is complete, we enter the `Snapshot` state (unless it's a CDC-only pipe, which would transition to `Running`). `Snapshot`, `Initial Snapshot` and `Initial Load` (more common) are interchangeable terms. In this state, we take a snapshot of the source MySQL tables and load them into ClickHouse. Retention setting for binary logs should account for initial load time. For more information on initial load, see [Initial load](#initial-load). The pipe will also enter the `Snapshot` state when a resync is triggered or when new tables are added to an existing pipe.
+
+### Running {#running}
+
+Once the initial load is complete, the pipe enters the `Running` state (unless it's a snapshot-only pipe, which would transition to `Completed`). This is where the pipe begins `Change-Data Capture`. In this state, we start reading binary logs from the source database and sync the data to ClickHouse in batches. For information on controlling CDC, see [Sync control](#sync-control).
+
+### Paused {#paused}
+
+Once the pipe is in the `Running` state, you can pause it. This will stop the CDC process and the pipe will enter the `Paused` state. In this state, no new data is pulled from the source database, but the existing data in ClickHouse remains intact. You can resume the pipe from this state.
+
+### Pausing {#pausing}
 
 <Note>
-Make sure to whitelist [ClickPipes IP addresses](/integrations/clickpipes/home#list-of-static-ips) in your firewall rules for the SSH bastion host so that ClickPipes can establish the SSH tunnel.
+This state is coming soon. If you're using our [OpenAPI](/products/cloud/features/admin-features/api/openapi), consider adding support for it now to ensure your integration continues working when it's released.
 </Note>
 
-Once the connection details are filled in, click `Next`.
+When you click on the Pause button, the pipe enters the `Pausing` state. This is a transient state where we're in the process of stopping the CDC process. Once the CDC process is fully stopped, the pipe will enter the `Paused` state.
 
-#### Configure advanced settings {#advanced-settings}
+### Modifying {#modifying}
 
-You can configure the advanced settings if needed. A brief description of each setting is provided below:
+<Note>
+This state is coming soon. If you're using our [OpenAPI](/products/cloud/features/admin-features/api/openapi), consider adding support for it now to ensure your integration continues working when it's released.
+</Note>
 
-- **Sync interval**: This is the interval at which ClickPipes will poll the source database for changes. This has an implication on the destination ClickHouse service, for cost-sensitive users we recommend to keep this at a higher value (over `3600`).
-- **Parallel threads for initial load**: This is the number of parallel workers that will be used to fetch the initial snapshot. This is useful when you have a large number of tables and you want to control the number of parallel workers used to fetch the initial snapshot. This setting is per-table.
-- **Pull batch size**: The number of rows to fetch in a single batch. This is a best effort setting and may not be respected in all cases.
-- **Snapshot number of rows per partition**: This is the number of rows that will be fetched in each partition during the initial snapshot. This is useful when you have a large number of rows in your tables and you want to control the number of rows fetched in each partition.
-- **Snapshot number of tables in parallel**: This is the number of tables that will be fetched in parallel during the initial snapshot. This is useful when you have a large number of tables and you want to control the number of tables fetched in parallel.
-- **Server ID**: Optional parameter to set the server ID for the MySQL binlog replication. If not set, ClickPipes will generate a random server ID that might change over the ClickPipe lifecycle. Use it to deterministically identify your ClickPipe at the source MySQL server side.
+Currently, this indicates the pipe is in the process of removing tables.
 
-### Configure the tables {#configure-the-tables}
+### Resync {#resync}
 
-5. Here you can select the destination database for your ClickPipe. You can either select an existing database or create a new one.
+<Note>
+This state is coming soon. If you're using our [OpenAPI](/products/cloud/features/admin-features/api/openapi), consider adding support for it now to ensure your integration continues working when it's released.
+</Note>
 
-   <Image img="/images/integrations/data-ingestion/clickpipes/mysql/select-destination-db.webp" alt="Select destination database" size="lg" border/>
+This state indicates the pipe is in the phase of resync where it is performing an atomic swap of the _resync tables with the original tables. More information on resync can be found in [Resync a pipe](/integrations/clickpipes/mysql/operations#resync-a-pipe).
 
-6. You can select the tables you want to replicate from the source MySQL database. While selecting the tables, you can also choose to rename the tables in the destination ClickHouse database as well as exclude specific columns.
+[//]: # "TODO Re-check the three 'coming soon' states above (`Pausing`, `Modifying`, `Resync`) — they may have shipped."
 
-### Review permissions and start the ClickPipe {#review-permissions-and-start-the-clickpipe}
+### Completed {#completed}
 
-7. Select the "Full access" role from the permissions dropdown and click "Complete Setup".
+This state applies to snapshot-only pipes and indicates that the snapshot has been completed and there's no more work to do.
 
-   <Image img="/images/integrations/data-ingestion/clickpipes/postgres/ch-permissions.jpg" alt="Review permissions" size="lg" border/>
+### Failed {#failed}
 
-Finally, please refer to the ["ClickPipes for MySQL FAQ"](/integrations/clickpipes/mysql/faq) page for more information about common issues and how to resolve them.
+If there is an irrecoverable error in the pipe, it will enter the `Failed` state. You can reach out to support or [resync](/integrations/clickpipes/mysql/operations#resync-a-pipe) your pipe to recover from this state.
 
-## What's next? {#whats-next}
+## Limitations {#limitations}
 
-[//]: # "TODO Write a MySQL-specific migration guide and best practices similar to the existing one for PostgreSQL. The current migration guide points to the MySQL table engine, which isn't ideal."
+[//]: # "TODO The three entries below were moved here from the FAQ because they describe things the MySQL ClickPipe can't do, rather than questions. There is no other existing limitations content to draw on — table and column limits, unsupported DDL, generated columns and view support are all still gaps."
 
-Once you've set up your ClickPipe to replicate data from MySQL to ClickHouse Cloud, you can focus on how to query and model your data for optimal performance. For common questions around MySQL CDC and troubleshooting, see the [MySQL FAQs page](/integrations/clickpipes/mysql/faq).
+### Cascading deletes aren't replicated {#support-on-delete-cascade}
+
+Due to how MySQL [handles cascading deletes](https://dev.mysql.com/doc/refman/8.0/en/innodb-and-mysql-replication.html), they're not written to the binlog. Therefore it's not possible for ClickPipes (or any CDC tool) to replicate them. This can lead to inconsistent data. It's advised to use triggers instead for supporting cascading deletes.
+
+### Tables with a dot in the identifier {#replicate-table-dot}
+
+PeerDB has a limitation currently where dots in source table identifiers - aka either schema name or table name - isn't supported for replication as PeerDB can't discern, in that case, what is the schema and what is the table as it splits on dot.
+Effort is being made to support input of schema and table separately to get around this limitation.
+
+### Previously excluded columns can't be included {#include-excluded-columns}
+
+Including columns you initially excluded from replication isn't yet supported. An alternative would be to [resync the table](/integrations/clickpipes/mysql/operations#resync-a-table) whose columns you want to include.

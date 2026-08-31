@@ -10,6 +10,8 @@ integration:
    - category: 'clickpipes'
 ---
 
+import CreateClickPipe from '/snippets/clickpipes/database/mysql/_create_mysql_clickpipe.mdx';
+
 <Info>
 
 If you use one of the supported providers (in the sidebar), please refer to the specific guide for that provider.
@@ -131,9 +133,10 @@ SSL certificates ensure secure connections to your MySQL database. Configuration
 
 **Self-hosted MySQL without server access** - Contact your IT team for the certificate. As a last resort, use the "Skip Certificate Verification" toggle in ClickPipes UI (not recommended for security reasons).
 
-For more information on SSL/TLS options, check out our [FAQ](/integrations/clickpipes/mysql/faq#tls-certificate-validation-error).
+For more information on SSL/TLS options, check out our [FAQ](/integrations/clickpipes/mysql/troubleshooting#tls-certificate-validation-error).
 
-## What's next? {#whats-next}
+## Create your ClickPipe {#create-your-clickpipe}
 
-You can now [create your ClickPipe](/integrations/clickpipes/mysql/index) and start ingesting data from your MySQL instance into ClickHouse Cloud.
-Make sure to note down the connection details you used while setting up your MySQL instance as you will need them during the ClickPipe creation process.
+Now that your MySQL instance is configured for binlog replication and securely connecting to ClickHouse Cloud, you can create your ClickPipe. Make sure to note down the connection details you used while setting up your MySQL instance as you will need them during the ClickPipe creation process.
+
+<CreateClickPipe />

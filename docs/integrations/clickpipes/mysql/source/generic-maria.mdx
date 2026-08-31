@@ -10,6 +10,8 @@ integration:
    - category: 'clickpipes'
 ---
 
+import CreateClickPipe from '/snippets/clickpipes/database/mysql/_create_mysql_clickpipe.mdx';
+
 <Info>
 
 If you use one of the supported providers (in the sidebar), please refer to the specific guide for that provider.
@@ -100,9 +102,10 @@ SSL certificates ensure secure connections to your MariaDB database. Configurati
 
 **Self-hosted MariaDB starting with 11.4** - If your server has `ssl_ca` set up, follow the option above. Otherwise, consult with your IT team to provision a proper certificate. As a last resort, use the "Skip Certificate Verification" toggle in ClickPipes UI (not recommended for security reasons).
 
-For more information on SSL/TLS options, check out our [FAQ](/integrations/clickpipes/mysql/faq#tls-certificate-validation-error).
+For more information on SSL/TLS options, check out our [FAQ](/integrations/clickpipes/mysql/troubleshooting#tls-certificate-validation-error).
 
-## What's next? {#whats-next}
+## Create your ClickPipe {#create-your-clickpipe}
 
-You can now [create your ClickPipe](/integrations/clickpipes/mysql/index) and start ingesting data from your MariaDB instance into ClickHouse Cloud.
-Make sure to note down the connection details you used while setting up your MariaDB instance as you will need them during the ClickPipe creation process.
+Now that your MariaDB instance is configured for binlog replication and securely connecting to ClickHouse Cloud, you can create your ClickPipe. Make sure to note down the connection details you used while setting up your MariaDB instance as you will need them during the ClickPipe creation process.
+
+<CreateClickPipe />

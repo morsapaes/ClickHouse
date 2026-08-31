@@ -11,11 +11,12 @@ integration:
 ---
 
 import { Image } from "/snippets/components/Image.jsx";
+import CreateClickPipe from '/snippets/clickpipes/database/mysql/_create_mysql_clickpipe.mdx';
 
 This is a step-by-step guide on how to configure your RDS MariaDB instance for replicating its data via the MySQL ClickPipe.
 <br/>
 <Info>
-We also recommend going through the MySQL FAQs [here](/integrations/clickpipes/mysql/faq). The FAQs page is being actively updated.
+We also recommend going through the MySQL FAQs [here](/integrations/clickpipes/mysql/troubleshooting). The FAQs page is being actively updated.
 </Info>
 
 ## Enable binary log retention {#enable-binlog-retention-rds}
@@ -113,3 +114,9 @@ If you want to restrict traffic to your RDS instance, please add the [documented
 ### Private access via AWS PrivateLink {#private-access-via-aws-privatelink}
 
 To connect to your RDS instance through a private network, you can use AWS PrivateLink. Follow our [AWS PrivateLink setup guide for ClickPipes](/resources/support-center/knowledge-base/cloud-services/aws-privatelink-setup-for-clickpipes) to set up the connection.
+
+## Create your ClickPipe {#create-your-clickpipe}
+
+Now that your Amazon RDS MariaDB instance is configured for binlog replication and securely connecting to ClickHouse Cloud, you can create your ClickPipe.
+
+<CreateClickPipe />

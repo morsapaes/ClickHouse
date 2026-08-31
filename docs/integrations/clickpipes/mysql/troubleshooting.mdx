@@ -1,0 +1,68 @@
+---
+sidebarTitle: 'Troubleshooting'
+description: 'Troubleshooting common issues with ClickPipes for MySQL.'
+slug: /integrations/clickpipes/mysql/troubleshooting
+title: 'ClickPipes for MySQL troubleshooting'
+doc_type: 'reference'
+keywords: ['MySQL ClickPipes troubleshooting', 'ClickPipes MySQL errors', 'MySQL ClickHouse replication', 'MySQL CDC ClickHouse']
+integration:
+  - support_level: 'core'
+  - category: 'clickpipes'
+---
+
+This page covers errors you may hit with a MySQL ClickPipe, and how to resolve them.
+
+## Why did my pipe fail with an unsupported MariaDB COMPRESSED column? {#mariadb-compressed-column-unsupported}
+
+If your pipe fails with an error similar to:
+
+```text
+table <database>.<table> has MariaDB COMPRESSED column(s) [<columns>], which cannot be replicated via CDC;
+convert them to a non-compressed type or remove the table from the mirror
+```
+
+it means the table has one or more columns using MariaDB's [column compression](https://mariadb.com/kb/en/storage-engine-independent-column-compression/) (`COLUMN_FORMAT COMPRESSED`). We can't decompress these values from the binlog, so the affected table can't be replicated via CDC.
+
+To resolve it:
+
+- **Convert the compressed columns to a non-compressed type** on the source (or remove a table from the pipe):
+  ```sql
+  ALTER TABLE <table> MODIFY <column> <type>; -- without COLUMN_FORMAT COMPRESSED
+  ```
+- resync the table or the pipe
+
+## Why is my pipe failing with a max_allowed_packet binlog error? {#binlog-event-exceeded-max-allowed-packet}
+
+If your pipe fails with an error similar to:
+
+```text
+MySQL execute error: ERROR 1236 (HY000): log event entry exceeded max_allowed_packet;
+Increase max_allowed_packet on source
+```
+
+it means a single binlog event (corresponding to one row change) is larger than your MySQL server's [`max_allowed_packet`](https://dev.mysql.com/doc/refman/8.0/en/server-system-variables.html#sysvar_max_allowed_packet) setting. Because the server can't send an event that exceeds this limit, the binlog stream read aborts and CDC can't progress.
+
+This is most often caused by rows containing large `BLOB`, `TEXT`, or `JSON` values. To resolve it:
+
+- **Increase `max_allowed_packet` on the source.** Raise it above the size of your largest row change — setting it to the maximum of `1G` is usually safe:
+  ```sql
+  SET GLOBAL max_allowed_packet = 1073741824; -- 1 GiB
+  ```
+  Set it in your server configuration (e.g. `my.cnf` or the DB Parameter Group) as well so it persists across restarts.
+- **If a single row is larger than 1G:** resync the pipe.
+
+## Why am I getting a TLS certificate validation error when connecting to MySQL? {#tls-certificate-validation-error}
+
+When connecting to MySQL, you may encounter certificate errors like `x509: certificate is not valid for any names` or `x509: certificate signed by unknown authority`. These occur because ClickPipes enables TLS encryption by default.
+
+You have several options to resolve these issues:
+
+1. **Set the TLS Host field** - When the hostname in your connection differs from the certificate (common with AWS PrivateLink via Endpoint Service). Set "TLS Host (optional)" to match the certificate's Common Name (CN) or Subject Alternative Name (SAN).
+
+2. **Upload your Root CA** - For MySQL servers using internal Certificate Authorities or Google Cloud SQL in the default per-instance CA configuration. For more information on how to access Google Cloud SQL certificates, see [this section](/integrations/clickpipes/mysql/source/gcp#download-root-ca-certificate-gcp-mysql).
+
+3. **Configure server certificate** - Update your server's SSL certificate to include all connection hostnames and use a trusted Certificate Authority.
+
+4. **Skip certificate verification** - For self-hosted MySQL or MariaDB, whose default configurations provision a self-signed certificate we can't validate ([MySQL](https://dev.mysql.com/doc/refman/8.4/en/creating-ssl-rsa-files-using-mysql.html#creating-ssl-rsa-files-using-mysql-automatic), [MariaDB](https://mariadb.com/kb/en/securing-connections-for-client-and-server/#enabling-tls-for-mariadb-server)). Relying on this certificate encrypts the data in transit but runs the risk of server impersonation. We recommend properly signed certificates for production environments, but this option is useful for testing on a one-off instance or connecting to legacy infrastructure.
+
+[//]: # "TODO CONTENT GAP — add an entry with the anchor {#secure-transport-required} for `require_secure_transport` conflicts. The in-product notification links to /integrations/clickpipes/mysql/faq#secure-transport-required, which doesn't exist today, so that mitigation link is broken. Content: the pipe has TLS disabled but the server enforces `require_secure_transport=ON`; re-enable TLS on the pipe, or relax the server setting. Note the in-product link points at the retired `faq` slug and will need updating in clickpipes-platform, or covering with the redirect."

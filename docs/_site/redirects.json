@@ -927,7 +927,6 @@
     "source": "/zh/knowledgebase/tags/performance-and-optimizations/page/2",
     "destination": "/zh/resources/support-center/home"
   },
-
   {
     "source": "/en/:path*",
     "destination": "/:path*"
@@ -3990,19 +3989,19 @@
   },
   {
     "source": "/integrations/clickpipes/mysql/add_table",
-    "destination": "/integrations/clickpipes/mysql/add-table"
+    "destination": "/integrations/clickpipes/mysql/operations#add-a-table"
   },
   {
     "source": "/integrations/clickpipes/mysql/parallel_initial_load",
-    "destination": "/integrations/clickpipes/mysql/parallel-initial-load"
+    "destination": "/integrations/clickpipes/mysql#initial-load"
   },
   {
     "source": "/integrations/clickpipes/mysql/pause_and_resume",
-    "destination": "/integrations/clickpipes/mysql/pause-and-resume"
+    "destination": "/integrations/clickpipes/mysql/operations#pause-and-resume"
   },
   {
     "source": "/integrations/clickpipes/mysql/removing_tables",
-    "destination": "/integrations/clickpipes/mysql/remove-table"
+    "destination": "/integrations/clickpipes/mysql/operations#remove-a-table"
   },
   {
     "source": "/integrations/clickpipes/mysql/source/generic_maria",
@@ -4014,11 +4013,11 @@
   },
   {
     "source": "/integrations/clickpipes/mysql/sync_control",
-    "destination": "/integrations/clickpipes/mysql/controlling-sync"
+    "destination": "/integrations/clickpipes/mysql#sync-control"
   },
   {
     "source": "/integrations/clickpipes/mysql/table_resync",
-    "destination": "/integrations/clickpipes/mysql/table-resync"
+    "destination": "/integrations/clickpipes/mysql/operations#resync-a-table"
   },
   {
     "source": "/integrations/clickpipes/object-storage",
@@ -52519,5 +52518,53 @@
   {
     "source": "/sql-reference/statements/create/dictionary/layouts/naive-bayes",
     "destination": "/reference/statements/create/dictionary/layouts/naive-bayes"
+  },
+  {
+    "source": "/integrations/clickpipes/mysql/datatypes",
+    "destination": "/integrations/clickpipes/mysql#data-types"
+  },
+  {
+    "source": "/integrations/clickpipes/mysql/lifecycle",
+    "destination": "/integrations/clickpipes/mysql#lifecycle"
+  },
+  {
+    "source": "/integrations/clickpipes/mysql/parallel-initial-load",
+    "destination": "/integrations/clickpipes/mysql#initial-load"
+  },
+  {
+    "source": "/integrations/clickpipes/mysql/controlling-sync",
+    "destination": "/integrations/clickpipes/mysql#sync-control"
+  },
+  {
+    "source": "/integrations/clickpipes/mysql/scaling",
+    "destination": "/integrations/clickpipes/mysql#scaling"
+  },
+  {
+    "source": "/integrations/clickpipes/mysql/schema-changes",
+    "destination": "/integrations/clickpipes/mysql/operations#schema-changes"
+  },
+  {
+    "source": "/integrations/clickpipes/mysql/add-table",
+    "destination": "/integrations/clickpipes/mysql/operations#add-a-table"
+  },
+  {
+    "source": "/integrations/clickpipes/mysql/remove-table",
+    "destination": "/integrations/clickpipes/mysql/operations#remove-a-table"
+  },
+  {
+    "source": "/integrations/clickpipes/mysql/pause-and-resume",
+    "destination": "/integrations/clickpipes/mysql/operations#pause-and-resume"
+  },
+  {
+    "source": "/integrations/clickpipes/mysql/resync",
+    "destination": "/integrations/clickpipes/mysql/operations#resync-a-pipe"
+  },
+  {
+    "source": "/integrations/clickpipes/mysql/table-resync",
+    "destination": "/integrations/clickpipes/mysql/operations#resync-a-table"
+  },
+  {
+    "source": "/integrations/clickpipes/mysql/faq",
+    "destination": "/integrations/clickpipes/mysql/troubleshooting"
   }
 ]

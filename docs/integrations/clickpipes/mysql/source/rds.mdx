@@ -11,8 +11,9 @@ integration:
 ---
 
 import { Image } from "/snippets/components/Image.jsx";
+import CreateClickPipe from '/snippets/clickpipes/database/mysql/_create_mysql_clickpipe.mdx';
 
-This step-by-step guide shows you how to configure Amazon RDS MySQL to replicate data into ClickHouse Cloud using the [MySQL ClickPipe](/integrations/clickpipes/mysql/index). For common questions around MySQL CDC, see the [MySQL FAQs page](/integrations/clickpipes/mysql/faq).
+This step-by-step guide shows you how to configure Amazon RDS MySQL to replicate data into ClickHouse Cloud using the [MySQL ClickPipe](/integrations/clickpipes/mysql). For common questions around MySQL CDC, see the [MySQL troubleshooting page](/integrations/clickpipes/mysql/troubleshooting).
 
 ## Enable binary log retention {#enable-binlog-retention-rds}
 
@@ -82,7 +83,7 @@ Then, click on **Save Changes** in the top right corner. You may need to reboot 
 ## Enable GTID Mode {#gtid-mode}
 
 <Tip>
-The MySQL ClickPipe also supports replication without GTID mode. However, enabling GTID mode is recommended for better performance and easier troubleshooting.
+GTID-based replication is the default and the only self-serve option in the MySQL ClickPipe. Binlog file position replication has to be enabled for your organization by [support](https://clickhouse.com/company/contact?loc=clickpipes).
 </Tip>
 
 [Global Transaction Identifiers (GTIDs)](https://dev.mysql.com/doc/refman/8.0/en/replication-gtids.html) are unique IDs assigned to each committed transaction in MySQL. They simplify binlog replication and make troubleshooting more straightforward. We **recommend** enabling GTID mode, so that the MySQL ClickPipe can use GTID-based replication.
@@ -102,7 +103,7 @@ GTID-based replication is supported for Amazon RDS for MySQL versions 5.7, 8.0 a
 
 <br/>
 <Tip>
-The MySQL ClickPipe also supports replication without GTID mode. However, enabling GTID mode is recommended for better performance and easier troubleshooting.
+GTID-based replication is the default and the only self-serve option in the MySQL ClickPipe. Binlog file position replication has to be enabled for your organization by [support](https://clickhouse.com/company/contact?loc=clickpipes).
 </Tip>
 
 ## Configure a database user {#configure-database-user}
@@ -152,6 +153,8 @@ To restrict traffic to your Aurora MySQL instance, add the [documented static NA
 
 To connect to your RDS instance through a private network, you can use AWS PrivateLink. Follow the [AWS PrivateLink setup guide for ClickPipes](/resources/support-center/knowledge-base/cloud-services/aws-privatelink-setup-for-clickpipes) to set up the connection.
 
-## Next steps {#next-steps}
+## Create your ClickPipe {#create-your-clickpipe}
 
-Now that your Amazon RDS MySQL instance is configured for binlog replication and securely connecting to ClickHouse Cloud, you can [create your first MySQL ClickPipe](/integrations/clickpipes/mysql/index#create-your-clickpipe). For common questions around MySQL CDC, see the [MySQL FAQs page](/integrations/clickpipes/mysql/faq).
+Now that your Amazon RDS MySQL instance is configured for binlog replication and securely connecting to ClickHouse Cloud, you can create your ClickPipe.
+
+<CreateClickPipe />

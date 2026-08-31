@@ -11,6 +11,7 @@ integration:
 ---
 
 import { Image } from "/snippets/components/Image.jsx";
+import CreateClickPipe from '/snippets/clickpipes/database/mysql/_create_mysql_clickpipe.mdx';
 
 This is a step-by-step guide on how to configure your Cloud SQL for MySQL instance for replicating its data via the MySQL ClickPipe.
 
@@ -79,3 +80,9 @@ To connect to your Cloud SQL instance, you need to download the root CA certific
 5. In the ClickPipes UI, upload the downloaded certificate when creating a new MySQL ClickPipe.
 
 <Image img="/images/integrations/data-ingestion/clickpipes/mysql/source/gcp/rootca.webp" alt="Using GCP MySQL Cert" size="lg" border/>
+
+## Create your ClickPipe {#create-your-clickpipe}
+
+Now that your Cloud SQL for MySQL instance is configured for binlog replication and securely connecting to ClickHouse Cloud, you can create your ClickPipe.
+
+<CreateClickPipe />
