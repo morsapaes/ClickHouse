@@ -207,3 +207,22 @@ MySQL versions older than [8.0.1](https://dev.mysql.com/blog-archive/more-metada
   - `ALTER TABLE CHANGE COLUMN ... AFTER ...` / `FIRST`
 
 If you hit this error, you will need to resync the pipe.
+
+## Lifecycle {#lifecycle}
+
+This section covers the various phases of a MySQL ClickPipe, the different statuses it can have, and what they mean. Note that this applies to MariaDB as well.
+
+[//]: # "TODO Add the `Degraded` state: the pipe is running but impaired, and Pause, Resume and Resync remain available from it. Not confirmed against the Cloud OpenAPI spec, which lists `Degraded` in the shared state enum but doesn't attribute it to database pipes."
+
+| State | Description |
+|-------|-------------|
+| `Provisioning` | The state a pipe enters when you click the Create ClickPipe button. We spin up the underlying infrastructure to run ClickPipes for the service and register some initial metadata for the pipe. Since compute for ClickPipes within a service is shared, your second ClickPipe will be created much faster than the first one, as the infrastructure is already in place. |
+| `Setup` | The state a pipe enters once it is provisioned. We create the destination ClickHouse tables, and obtain and record the table definitions of your source tables. |
+| `Snapshot` | The state a pipe enters once setup is complete, unless it's a CDC-only pipe, which transitions to `Running` instead. We take a snapshot of the source MySQL tables and load them into ClickHouse. `Snapshot`, `Initial Snapshot` and `Initial Load` (more common) are interchangeable terms. The retention setting for binary logs should account for initial load time. A pipe also re-enters this state when a resync is triggered, or when new tables are added to an existing pipe. See [Initial load](/integrations/clickpipes/mysql#initial-load). |
+| `Running` | The state a pipe enters once the initial load is complete, unless it's a snapshot-only pipe, which transitions to `Completed` instead. This is where the pipe begins `Change-Data Capture`: we read binary logs from the source database and sync the data to ClickHouse in batches. See [Sync control](/integrations/clickpipes/mysql#sync-control). |
+| `Pausing` | A transient state the pipe enters when you click the Pause button, while we stop the CDC process. Once the CDC process is fully stopped, the pipe enters the `Paused` state. |
+| `Paused` | The CDC process is stopped. No new data is pulled from the source database, but the existing data in ClickHouse remains intact. You can resume the pipe from this state. |
+| `Modifying` | The pipe is applying configuration updates. Currently, this indicates the pipe is in the process of removing tables. |
+| `Resync` | The pipe is in the phase of resync where it is performing an atomic swap of the `_resync` tables with the original tables. See [Resync a pipe](#resync-a-pipe). |
+| `Completed` | This state applies to snapshot-only pipes and indicates that the snapshot has been completed and there's no more work to do. |
+| `Failed` | The pipe hit an irrecoverable error. You can reach out to support or [resync](#resync-a-pipe) your pipe to recover from this state. |

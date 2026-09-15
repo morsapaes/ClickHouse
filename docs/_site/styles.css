@@ -3629,3 +3629,11 @@ a.mobile-nav-tabs-item[href$="/products/clickhouse-private/index"] {
 td:has(> .integration-table-logo) {
     white-space: nowrap;
 }
+
+/* Logo beside a label with a second line: keeps the second line aligned with
+   the label instead of under the logo. */
+.integration-table-entry {
+    display: flex;
+    align-items: flex-start;
+    white-space: nowrap;
+}

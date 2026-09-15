@@ -55053,7 +55053,7 @@
   },
   {
     "source": "/integrations/clickpipes/mysql/lifecycle",
-    "destination": "/integrations/clickpipes/mysql#lifecycle"
+    "destination": "/integrations/clickpipes/mysql/operations#lifecycle"
   },
   {
     "source": "/integrations/clickpipes/mysql/parallel-initial-load",

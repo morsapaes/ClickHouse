@@ -106,4 +106,4 @@ To resolve it:
 - **Re-enable TLS on the pipe.** In the pipe's **Settings**, open the connection settings and turn off the **Disable TLS** toggle. If saving then surfaces a certificate error, see [Why am I getting a TLS certificate validation error when connecting to MySQL?](#tls-certificate-validation-error) for how to set a TLS host, upload a root CA, or skip certificate verification.
 - **Or turn off `require_secure_transport` on the source** — in the DB parameter group on RDS, or the DB cluster parameter group on Aurora — if unencrypted connections are acceptable in your environment.
 
-Replication resumes from where it stopped once the connection succeeds. If the pipe was failing for longer than your binlog retention period (see [Replication](/integrations/clickpipes/mysql#replication)), you will need to resync it.
+Replication resumes from where it stopped once the connection succeeds. If the pipe was failing for longer than your binlog retention period (see [CDC](/integrations/clickpipes/mysql#cdc)), you will need to resync it.
